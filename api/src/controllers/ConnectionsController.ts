@@ -4,6 +4,7 @@ import connection from '../database/connection';
 export default class ConnectionsController {
   async index(request: Request, response: Response) {
     const totalConnections = await connection('connections').count('* as total');
+    console.log(totalConnections);
 
     const { total } = totalConnections[0];
 
@@ -18,11 +19,13 @@ export default class ConnectionsController {
     const trx = await connection.transaction();
 
     try {
-      await trx('connections').insert({
+      const insertedIds = await trx('connections').insert({
         user_id
-      });
+      }).returning('id');
+
       await trx.commit();
-      return response.status(201);
+
+      return response.status(201).send();
     } catch(err) {
       await trx.rollback();
       return response.status(400).json({
